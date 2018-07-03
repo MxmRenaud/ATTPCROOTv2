@@ -64,6 +64,7 @@ GETDecoder2/GETFileChecker.cc
 ATDecoder/ATCore.cc
 ATDecoder/ATCore2.cc
 ATDecoder/ATPad.cc
+#ATDecoder/ATPad2.cc
 ATDecoder/ATRawEvent.cc
 ATDecoder/ATHit.cc
 ATDecoder/ATEvent.cc
@@ -74,6 +75,7 @@ ATDecoder/ATPatternEvent.cc
 ATDecoder/ATProtoQuadrant.cc
 ATDecoder/ATPedestal.cc
 ATDecoder/ATTrack.cc
+ATDecoder/ATHDFParser.cc
 
 ATPulseAnalyzer/ATPSA.cc
 ATPulseAnalyzer/ATPSASimple.cc
@@ -124,6 +126,7 @@ ATPatternRecognition/fastcluster.cc
 
 ATDecoderTask.cc
 ATDecoder2Task.cc
+ATHDFParserTask.cc
 ATPSATask.cc
 ATPhiRecoTask.cc
 ATHoughTask.cc
@@ -154,6 +157,7 @@ Set(DEPENDENCIES
     AtTpcMap
     ATPar
     Spectrum
+    hdf5
     ${Boost_LOG_LIBRARY}
     ${Boost_LOG_SETUP_LIBRARY}
     ${Boost_THREAD_LIBRARY}

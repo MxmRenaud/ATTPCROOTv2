@@ -1,11 +1,9 @@
 void rundigi_sim
-(TString mcFile = "/Users/yassid/fair_install/ATTPCROOTv2/macro/Simulation/data/attpcsim_proto.root",
- TString digiParFile = "/Users/yassid/fair_install/ATTPCROOTv2/parameters/AT.digi.par",
- TString mapParFile = "/Users/yassid/fair_install/ATTPCROOTv2/scripts/Lookup20150611.txt",
-TString trigParFile = "/Users/yassid/fair_install/ATTPCROOTv2/parameters/AT.trigger.par")
+(TString mcFile = "../data/attpcsim_e15250.root",
+ TString digiParFile = "../../../parameters/AT.digi.par",
+ TString mapParFile = "../../../scripts/Lookup20150611.txt",
+ TString trigParFile = "../../../parameters/AT.trigger.par")
 {
-
-
   // -----   Timer   --------------------------------------------------------
  TStopwatch timer;
  timer.Start();
@@ -30,7 +28,7 @@ TString trigParFile = "/Users/yassid/fair_install/ATTPCROOTv2/parameters/AT.trig
       clusterizer -> SetPersistence(kFALSE);
 
       ATPulseTask* pulse = new ATPulseTask();
-      pulse -> SetPersistence(kFALSE);
+      pulse -> SetPersistence(kTRUE);
 
       ATPSATask *psaTask = new ATPSATask();
       psaTask -> SetPersistence(kTRUE);
@@ -49,12 +47,12 @@ TString trigParFile = "/Users/yassid/fair_install/ATTPCROOTv2/parameters/AT.trig
   fRun -> AddTask(clusterizer);
   fRun -> AddTask(pulse);
   //fRun -> AddTask(psaTask);
-  //`fRun -> AddTask(trigTask);
+  //fRun -> AddTask(trigTask);
 
   // __ Init and run ___________________________________
 
   fRun -> Init();
-  fRun -> Run(0,2);
+  fRun -> Run(0,10);
 
   std::cout << std::endl << std::endl;
   std::cout << "Macro finished succesfully."  << std::endl << std::endl;

@@ -23,6 +23,7 @@
 
 #pragma link C++ class ATCore+;
 #pragma link C++ class ATCore2+;
+#pragma link C++ class ATHDFParser+;
 #pragma link C++ class ATPad+;
 #pragma link C++ class ATRawEvent+;
 #pragma link C++ class ATHit+;
@@ -80,7 +81,6 @@
 #pragma link C++ class ATPSATask+;
 #pragma link C++ class ATPhiRecoTask+;
 
-#pragma link C++ class ATFindVertex+; // TODO: move somewhere else?
 #pragma link C++ class ATHierarchicalClusteringTask+;
 //#pragma link C++ class ATTrackFinderHCTask+;
 #pragma link C++ class ATPRATask+;
@@ -103,6 +103,7 @@
 #pragma link C++ class ATTrackingAnalysis+;
 #pragma link C++ struct ATHoughSpaceCircle::FitPar+;
 #pragma link C++ struct ATTrack::FitPar+;
+#pragma link C++ class ATHDFParserTask+;
 //#pragma link C++ function ATHoughSpaceLine::CalcGenHoughSpace<ATEvent*>(GenHough event);
 
 

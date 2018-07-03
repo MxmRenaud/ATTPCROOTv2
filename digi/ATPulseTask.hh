@@ -16,6 +16,7 @@
 #include "FairMCPoint.h"
 
 #include "TClonesArray.h"
+#include "TH1D.h"
 #include "ATDigiPar.hh"
 #include "TH2Poly.h"
 #include "AtTpcMap.h"
@@ -30,6 +31,8 @@ class ATPulseTask : public FairTask
      ATPulseTask();
      ~ATPulseTask();
 
+
+
     void SetPersistence(Bool_t val) { fIsPersistent = val; }
     virtual InitStatus Init();        //!< Initiliazation of task at the beginning of a run.
     virtual void Exec(Option_t* opt); //!< Executed for each event.
@@ -37,7 +40,7 @@ class ATPulseTask : public FairTask
 
    private:
     ATGas*     fGas;                     //!< Gas parameter container.
-    ATDigiPar* fPar; //!< Base parameter container.
+    ATDigiPar* fPar;                     //!< Base parameter container.
     Int_t fEventID;                      //!< EventID
     Double_t fGain;                      //!< Gain.
     Bool_t fIsPersistent;                //!< If true, save container
@@ -48,8 +51,10 @@ class ATPulseTask : public FairTask
     AtTpcMap *fMap;                      //!<ATTPC map
     Int_t fInternalID;                   //!<Internal ID
 
+  std::map<Int_t, TH1F*> electronsMap;    //!< 
+  TH1F* eleAccumulated;                  //!< 
 
-     ClassDef(ATPulseTask,1);
+    ClassDef(ATPulseTask,1);
 
 };
 

@@ -82,6 +82,7 @@ ATPulseAnalyzer/ATPSASimple.cc
 ATPulseAnalyzer/ATPSASimple2.cc
 ATPulseAnalyzer/ATPSAFilter.cc
 ATPulseAnalyzer/ATPSAProto.cc
+ATPulseAnalyzer/ATPSAFull.cc
 
 HierarchicalClustering/ATCubicSplineFit.cc
 HierarchicalClustering/ATFindVertex.cc
@@ -157,7 +158,7 @@ Set(DEPENDENCIES
     AtTpcMap
     ATPar
     Spectrum
-    hdf5
+    ${HDF5_LIBRARIES}
     ${Boost_LOG_LIBRARY}
     ${Boost_LOG_SETUP_LIBRARY}
     ${Boost_THREAD_LIBRARY}

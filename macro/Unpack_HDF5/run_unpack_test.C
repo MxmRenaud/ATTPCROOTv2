@@ -4,7 +4,7 @@
 #define cGREEN "\033[1;32m"
 
 
-void run_unpack_test(std::string dataFile = "/home/ayyadlim/Desktop/test.h5",TString parameterFile = "ATTPC.alpha.par",TString mappath="/data/ar46/run_0085/")
+void run_unpack_test(std::string dataFile = "/home/ayyadlim/Desktop/run_0097.h5",TString parameterFile = "ATTPC.e15250.par",TString mappath="")
 {
 
   // -----   Timer   --------------------------------------------------------
@@ -56,14 +56,14 @@ void run_unpack_test(std::string dataFile = "/home/ayyadlim/Desktop/test.h5",TSt
   rtdb -> setSecondInput(parIo1);
 
   ATHDFParserTask* HDFParserTask = new ATHDFParserTask();
-  HDFParserTask->SetPersistence(kFALSE);
+  HDFParserTask->SetPersistence(kTRUE);
   HDFParserTask->SetATTPCMap(scriptdir.Data());
   HDFParserTask->SetFileName(dataFile);
 
   ATPSATask *psaTask = new ATPSATask();
   psaTask -> SetPersistence(kTRUE);
   psaTask -> SetThreshold(10);
-  psaTask -> SetPSAMode(1); //NB: 1 is ATTPC - 2 is pATTPC - 3 Filter for ATTPC
+  psaTask -> SetPSAMode(3); //NB: 1 is ATTPC - 2 is pATTPC - 3 Filter for ATTPC - 4: Full Time Buckets
   //psaTask -> SetPeakFinder(); //NB: Use either peak finder of maximum finder but not both at the same time
   psaTask -> SetMaxFinder();
   //psaTask -> SetBaseCorrection(kTRUE); //Directly apply the base line correction to the pulse amplitude to correct for the mesh induction. If false the correction is just saved
@@ -75,7 +75,7 @@ void run_unpack_test(std::string dataFile = "/home/ayyadlim/Desktop/test.h5",TSt
 
   run -> Init();
 
-  run->Run(0,100);
+  run->Run(0,1000);
   //run -> RunOnTBData();
 
 

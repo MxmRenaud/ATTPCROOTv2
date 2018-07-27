@@ -115,7 +115,7 @@ ATPSASimple2::Analyze(ATRawEvent *rawEvent, ATEvent *event)
 
       if(fIsPeakFinder) maxAdcIdx = (Int_t)(ceil((PeakFinder -> GetPositionX())[iPeak]));
 
-    //  Int_t maxAdcIdx = *std::max_element(floatADC,floatADC+512);
+    //  Int_t maxAdcIdx = *std::max_element(floatADC,floatADC+fNumTbs);
 
     if(fIsMaxFinder){
       for (Int_t ij = 20; ij < 500; ij++) //Excluding first and last 12 Time Buckets

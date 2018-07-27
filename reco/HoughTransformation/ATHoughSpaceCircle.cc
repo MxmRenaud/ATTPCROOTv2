@@ -1037,7 +1037,7 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                    std::vector<ATTrack*> trackSpiral = Ransac->RansacPCL(event);
                    std::vector<ATTrack*> trackSpiral_buff;
                    //std::cout<<" Found : "<<trackSpiral.size()<<" tracks "<<std::endl;
-                   if(trackSpiral.size()>1){
+                   if(trackSpiral.size()>0){
                      for(Int_t ntrack=0;ntrack<trackSpiral.size();ntrack++){
                        std::vector<ATHit>* trackHits = trackSpiral.at(ntrack)->GetHitArray();
                        Int_t _Hits = trackHits->size();
@@ -1066,7 +1066,7 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                               // Since the method returns the "stronger" lines ordered we limit the attemps to 5
                                Ransac->MinimizeTrackRPhi(trackSpiral.at(ntrack)); //Limited to 5 lines with more than 5 hits
                                std::vector<Double_t> LinePar = trackSpiral.at(ntrack)->GetFitPar();
-                                  if(LinePar.size()!=0 && LinePar.at(1)<0){
+                                  if(LinePar.size()!=0){
                                      trackSpiral_buff.push_back(trackSpiral.at(ntrack));
                                      n_track_cnt++;
                                    } //Remove failed fits and lines with positive slope
@@ -1076,6 +1076,7 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                      }// Tracks loop (trackSpiral)
 
                      //std::cout<<" Remaining : "<<trackSpiral_buff.size()<<" tracks "<<std::endl;
+
 
                   if(trackSpiral_buff.size()>0){
 
@@ -1090,7 +1091,7 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                       Double_t x_mean = 0.0;
                       Double_t y_mean = 0.0;
                       Bool_t kGoodDensity = kFALSE;
-                      Int_t fGoodDensity = 6; //Minimum density for the starting point
+                      Int_t fGoodDensity = 4; //Minimum density for the starting point
 
                       while(lastHitMult==0 && index<trackHits->size() && !kGoodDensity){
                               kGoodDensity = kFALSE;
@@ -1109,7 +1110,13 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                                   fIniHitRansac->SetHit(hit.GetHitPadNum(),hit.GetHitID(),position.X(),position.Y(),position.Z(),hit.GetCharge());
                                   if(kDebug) std::cout<<cGREEN<<" Ini Hit TimeStamp : "<<hit.GetTimeStamp()<<cNORMAL<<std::endl;
                                   fIniHitRansac->SetTimeStamp(hit.GetTimeStamp());
-                                  fIniRadiusRansac = TMath::Sqrt(  TMath::Power((fXCenter-position.X()),2)   +  TMath::Power((fYCenter-position.Y()),2)    );
+                                  std::vector<ATTrack*> circleTracks = smoothRadius(trackCand);
+                              
+                                  if(circleTracks.size()>0)fIniRadiusRansac = circleTracks[0]->GetRANSACCoeff()[2];
+                                  else fIniRadiusRansac = TMath::Sqrt(  TMath::Power((fXCenter-position.X()),2)   +  TMath::Power((fYCenter-position.Y()),2)    );
+                                  std::cout<<cRED<<" Radius Ransac "<<fIniRadiusRansac<<"\n";
+                                  std::cout<<" fXCenter "<<fXCenter<<"  fYCenter "<<fYCenter<<" "<<position.X()<<"  "<<position.Y()<<cNORMAL<<"\n";
+
                                   fIniPhiRansac = TMath::ATan2(fXCenter-position.X(),fYCenter-position.Y());
                                   fRansacLinePar = trackCand.GetFitPar();
                                   // Moving from Hough Space to RANSAC
@@ -1132,6 +1139,8 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                    }// Minimum tracks
 
                  }//track spiral size
+
+                 delete Ransac;
 
                }// RANSAC block if !kHough
 
@@ -1298,8 +1307,8 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
                     lowerlimit=45.0;
                     condAngle=HoughAngleDeg;
                   }else{
-                    upperlimit=-45.0;
-                    lowerlimit=-90.0;
+                    upperlimit=180.0;
+                    lowerlimit=-180.0;
                     condAngle=RansacAngle;
                   }
 
@@ -1370,7 +1379,7 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
 
                 }
 
-                 //delete Ransac;
+                 
                  delete min;
                  delete parameter;
 
@@ -1378,11 +1387,23 @@ void ATHoughSpaceCircle::CalcHoughSpace(ATEvent* event,TH2Poly* hPadPlane,const 
 
 }
 
+std::vector<ATTrack*> ATHoughSpaceCircle::smoothRadius(ATTrack &trackCand)
+{
+
+        
+        RansacSmoothRadius.SetModelType(pcl::SACMODEL_CIRCLE2D);
+        RansacSmoothRadius.SetRANSACPointThreshold(0.1);
+        RansacSmoothRadius.SetDistanceThreshold(6.0);
+        return RansacSmoothRadius.Ransac(trackCand.GetHitArray());
+
+
+}
+
 
 std::pair<Double_t,Double_t> ATHoughSpaceCircle::CalHoughParameters(TH2F* hist){
 
-		std::pair<Double_t,Double_t> HoughParBuff;
-		Int_t locmaxx,locmaxy,locmaxz;
+	std::pair<Double_t,Double_t> HoughParBuff;
+	Int_t locmaxx,locmaxy,locmaxz;
     hist->GetMaximumBin(locmaxx,locmaxy,locmaxz);
     Double_t xpos = hist->GetXaxis()->GetBinCenter(locmaxx);
     Double_t ypos = hist->GetYaxis()->GetBinCenter(locmaxy);

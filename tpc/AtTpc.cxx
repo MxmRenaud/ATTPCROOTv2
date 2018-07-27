@@ -183,7 +183,7 @@ Bool_t  AtTpc::ProcessHits(FairVolume* vol)
          gMC->TrackPosition(fPosIn);
          gMC->TrackMomentum(fMomIn);
          fTrackID  = gMC->GetStack()->GetCurrentTrackNumber();
-         if(gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0 && fVolName=="drift_volume" )InPos = fPosIn; // Position of the first hit of the beam in the TPC volume ( For tracking purposes in the TPC)
+         if(gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0 && (fVolName=="drift_volume" || fVolName=="cell") )InPos = fPosIn; // Position of the first hit of the beam in the TPC volume ( For tracking purposes in the TPC)
          Int_t VolumeID;
          if(gATVP->GetBeamEvtCnt()%2!=0) LOG(INFO) << " ATTPC: Beam Event " <<FairLogger::endl;
          else if(gATVP->GetDecayEvtCnt()%2==0) LOG(INFO) << " ATTPC: Reaction/Decay Event " <<FairLogger::endl;
@@ -195,6 +195,7 @@ Bool_t  AtTpc::ProcessHits(FairVolume* vol)
          LOG(INFO) << " Atomic Number : "<<AZ.second<<FairLogger::endl;
          LOG(INFO)<<" Volume ID "<<gMC->CurrentVolID(VolumeID)<<FairLogger::endl;
          LOG(INFO)<<" Track ID : "<<fTrackID<<FairLogger::endl;
+         LOG(INFO)<<" Position : "<<fPosIn.X()<<" "<<fPosIn.Y()<<"  "<<fPosIn.Z()<<std::endl;
          LOG(INFO)<<" Total relativistic energy " <<gMC->Etot()<< FairLogger::endl;
          LOG(INFO)<<" Mass of the Tracked particle (gAVTP) : "<<gATVP->GetBeamMass()<<std::endl;
          LOG(INFO)<<" Mass of the Tracked particle (gMC) : "<<gMC->TrackMass()<<std::endl;
@@ -207,6 +208,7 @@ Bool_t  AtTpc::ProcessHits(FairVolume* vol)
                std::cout<<" Recoil Angle : "<<gATVP->GetRecoilA()<<std::endl;
       	 std::cout<<" Scattered Angle : "<<gATVP->GetScatterA()<<std::endl;*/
     }
+
 
       //
       fELoss = gMC->Edep();
@@ -263,26 +265,18 @@ Bool_t  AtTpc::ProcessHits(FairVolume* vol)
             fPosOut.SetY(newpos[1]);
             fPosOut.SetZ(newpos[2]);
 
-            if(fVolName=="drift_volume" && gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0 ){
+            if( (fVolName=="drift_volume" || fVolName=="cell") && gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0 ){
 		            gATVP->ResetVertex(); 
                 LOG(INFO)<<" - AtTpc Warning : Beam punched through the ATTPC. Reseting Vertex! "<<std::endl;
 		        }
 
          }
 
-	/*
-	//solo por curiosidad
-	 std::cout<<"======================================================================"<<std::endl;
-	 std::cout<<" Current Decay particle count : "<<gATVP->GetDecayEvtCnt()<<std::endl;
-	 std::cout<<" Current Beam particle count :  "<<gATVP->GetBeamEvtCnt()<<std::endl;
-	 std::cout<<"fTrackID : "<<fTrackID<<std::endl;
-	 std::cout<<"======================================================================"<<std::endl;
-	*/
 	}// if track
 
 
 
-              	 if( gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0) { // We assume that the beam-like particle is fTrackID==0 since it is the first one added
+              	if( gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0) { // We assume that the beam-like particle is fTrackID==0 since it is the first one added
               														//  in the Primary Generator
 
                              // std::cout<<" Current Decay particle count : "<<gATVP->GetDecayEvtCnt()<<std::endl;
@@ -437,7 +431,7 @@ Bool_t  AtTpc::ProcessHits(FairVolume* vol)
 
 
 
-        	if(fELossAcc*1000>gATVP->GetRndELoss()  &&   (gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0) && fVolName=="drift_volume"){
+        	if(fELossAcc*1000>gATVP->GetRndELoss()  &&   (gATVP->GetBeamEvtCnt()%2!=0 && fTrackID==0) && (fVolName=="drift_volume" || fVolName=="cell")){
         	       LOG(INFO)<<" Beam energy loss before reaction : "<<fELossAcc*1000<<FairLogger::endl;
         	       gMC->StopTrack();
                  gATVP->ResetVertex();
@@ -448,7 +442,7 @@ Bool_t  AtTpc::ProcessHits(FairVolume* vol)
                  LOG(INFO)<<" Mass of the Tracked particle : "<<gMC->TrackMass()<<std::endl;
                  LOG(INFO)<<" Mass of the Beam from global vertex pointer : "<<gATVP->GetBeamMass()<<std::endl;
         	      // LOG(INFO)<<" Total energy of the current track : "<<((gMC->Etot() - gMC->TrackMass()) * 1000.)<<FairLogger::endl;// Relativistic Mass
-                 Double_t StopEnergy = ((gMC->Etot() - gMC->TrackMass()) * 1000.);
+                 Double_t StopEnergy = ((gMC->Etot() - gATVP->GetBeamMass()*0.93149401) * 1000.);
                  LOG(INFO)<<" Total energy of the Beam particle before reaction : "<<StopEnergy<<FairLogger::endl;// Relativistic Mass
                  gATVP->SetVertex(StopPos.X(),StopPos.Y(),StopPos.Z(),InPos.X(),InPos.Y(),InPos.Z(),StopMom.Px(),StopMom.Py(),StopMom.Pz(),StopEnergy);
         	 // std::cout<<" Entrance Position 2 - X : "<<InPos.X()<<" - Y : "<<InPos.Y()<<" - Z : "<<InPos.Z()<<std::endl;
@@ -610,7 +604,7 @@ Bool_t AtTpc::CheckIfSensitive(std::string name)
 {
 
   TString tsname = name;
-  if (tsname.Contains("drift_volume") || tsname.Contains("window")) {
+  if (tsname.Contains("drift_volume") || tsname.Contains("window") || tsname.Contains("cell")) {
     LOG(INFO)<<" ATTPC geometry: Sensitive volume found: "<<tsname<<FairLogger::endl;
     return kTRUE;
   }

@@ -214,7 +214,7 @@ std::vector<ATTrack*> ATRANSACN::ATRansac::Ransac(std::vector<ATHit>* hits)
           Int_t PadNumHit = hit->GetHitPadNum();
           TVector3 position = hit->GetPosition();
 
-        if(fRPhiSpace){
+        if(fRPhiSpace){ //TODO: Pass a vector of hits with the proper RxPhi conversion
           cloud->points[iHit].x = hit->GetTimeStamp();
           cloud->points[iHit].y = TMath::Sqrt(  TMath::Power((fXCenter-position.X()),2)   +  TMath::Power((fYCenter-position.Y()),2)    )*TMath::ATan2(fXCenter-position.X(),fYCenter-position.Y());
           cloud->points[iHit].z = 0.0;
@@ -258,12 +258,14 @@ while (cloud->points.size () > fRANSACPointThreshold * nr_points)
 
      std::vector<Double_t> coeff;
 
-     std::cerr << "Model coefficients: " << coefficients->values[0] << " " 
+     /*std::cerr << "Model coefficients: " << coefficients->values[0] << " " 
                                          << coefficients->values[1] << " "
                                          << coefficients->values[2] << " " 
-                                         << coefficients->values[3] << std::endl;
+                                         << coefficients->values[3] << " "
+                                         << coefficients->values[4] << "  "
+                                         << coefficients->values[5] << std::endl;*/
 
-     for(auto icoeff=0;icoeff<4;++icoeff)
+     for(auto icoeff=0;icoeff<6;++icoeff)
           coeff.push_back(coefficients->values[icoeff]);                                    
 
 
@@ -371,9 +373,9 @@ Int_t ATRANSACN::ATRansac::MinimizeTrack(ATTrack* track)
              track->SetMinimum(Chi2_min);
              track->SetNFree(NDF);
 
-             /*std::cout<<parFit[0]<<" "<<parFit[1]<<"  "<<parFit[2]<<" "<<parFit[3]<<std::endl;
+             std::cout<<parFit[0]<<" "<<parFit[1]<<"  "<<parFit[2]<<" "<<parFit[3]<<std::endl;
  		         std::cout<<" Chi2 (Minuit) : "<<Chi2_min<<" NDF : "<<NDF<<std::endl;
-             std::cout<<" Chi2 reduced  : "<<(Chi2_min/sigma2/(double) npoints)<<std::endl;*/
+             std::cout<<" Chi2 reduced  : "<<(Chi2_min/sigma2/(double) npoints)<<std::endl;
 
 
 

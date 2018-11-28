@@ -7,7 +7,7 @@
 #include <fstream>
 
 
-void li8_ana(Int_t num_ev=1000)
+void li8_ana(Int_t num_ev=125)
 {
 
     TH2D *Eloss_vs_Range_Sca = new TH2D("EnergySca_vs_AngleSca","EnergySca_vs_AngleSca",40,0,40,1000,0,40);
@@ -40,19 +40,19 @@ void li8_ana(Int_t num_ev=1000)
     TH2D *Angle_sca_vs_Angle_rec = new TH2D("Angle_sca_vs_Angle_rec","Angle_sca_vs_Angle_rec",90,0,90,90,0,90);
 
 	// Canvases
-    TCanvas *c1 = new TCanvas();
+  /*  TCanvas *c1 = new TCanvas();
     c1->Divide(2,2);
-    c1->Draw();
+    c1->Draw(); */
 
     TCanvas *c2 = new TCanvas();
     c2->Divide(2,2);
     c2->Draw();
 
-    TCanvas *c6 = new TCanvas();
-    c6->Divide(1,3);
-    c6-> Draw();
+   // TCanvas *c6 = new TCanvas();
+   // c6->Divide(1,3);
+   // c6-> Draw();
 
-    TString mcFileNameHead = "data/attpcsim_proto_li8-scat";
+    TString mcFileNameHead = "data/attpcsim_proto_li8-alph-n-ExE";
     TString mcFileNameTail = ".root";
     TString mcFileName     = mcFileNameHead + mcFileNameTail;
     std:cout << " Analysis of simulation file  " << mcFileName << endl;
@@ -74,7 +74,7 @@ void li8_ana(Int_t num_ev=1000)
 
     if(nEvents>num_ev) nEvents=num_ev;
 
-    for(Int_t iEvent=0; iEvent<nEvents; iEvent++)
+    for(Int_t iEvent=120; iEvent<nEvents; iEvent++)
     {
         Double_t energyLoss_sca=0.0;
         Double_t range_sca=0.0;
@@ -204,14 +204,14 @@ void li8_ana(Int_t num_ev=1000)
 
     } // end of event loop
 
-    c1->cd(1);
+ /*   c1->cd(1);
     Eloss_vs_Range_Sca->Draw("scat");
     c1->cd(2);
     Eloss_vs_Range_Rec->Draw("scat");
     c1->cd(3);
     ESca_vs_ERec->Draw();
     c1->cd(4);
-    Angle_sca_vs_Angle_rec->Draw("zcol");
+    Angle_sca_vs_Angle_rec->Draw("zcol");*/
 
     c2->cd(1);
     HKineRecoil->Draw("scat");
@@ -220,12 +220,12 @@ void li8_ana(Int_t num_ev=1000)
     c2->cd(3);
 	ElossRings->Draw("scat");
 
-      c6->cd(1);
+    /*  c6->cd(1);
       Range_vs_Energy_Sca->Draw();
       c6->cd(2);
       Range_vs_Energy_Rec->Draw();
       c6->cd(3);
-      Range_vs_Energy_Beam->Draw();
+      Range_vs_Energy_Beam->Draw();*/
 
 
 }

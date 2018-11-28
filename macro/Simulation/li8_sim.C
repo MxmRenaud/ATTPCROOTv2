@@ -1,11 +1,11 @@
-void li8_sim(Int_t nEvents = 1000, TString mcEngine = "TGeant4")
+void li8_sim(Int_t nEvents = 200, TString mcEngine = "TGeant4")
 {
 
   TString dir = getenv("VMCWORKDIR");
   
   //README !!!!!!
-  Int_t scatFus =  0; //0 ==  scattering, 1 == a(8Li,n)11B, 2= a(8Li,0)12B
-  Double_t z1,z2,a1,a2,m1,m2;
+  Int_t scatFus =  1; //0 ==  scattering, 1 == a(8Li,n)11B, 2= a(8Li,0)12B
+  Double_t z1,z2,a1,a2,m1,m2,Exec;
   if (scatFus == 0){//i = 1 -> "scattered", i = 2 -> "recoil"
   	z1 = 3;
   	a1 = 8;
@@ -17,10 +17,11 @@ void li8_sim(Int_t nEvents = 1000, TString mcEngine = "TGeant4")
   else if (scatFus == 1){
   	z1 = 0;
   	a1 = 1;
-  	m1 = 1; //GeV TODO: WHAT ?
+  	m1 = 0.939; //GeV TODO: WHAT ?
   	z2 = 5;
   	a2 = 11;
   	m2 = 10.9238; //GeV TODO: WHAT ?
+  	Exec = 0; //in MeV gs: 0 E1: 2.124 E2: 4.444
   }
 /*  else if (scatFus == 2){//doesn't work
   	z1 = 0;
@@ -34,10 +35,10 @@ void li8_sim(Int_t nEvents = 1000, TString mcEngine = "TGeant4")
   	
 
   // Output file name
-  TString outFile ="./data/attpcsim_proto_li8-scat.root";
+  TString outFile ="./data/attpcsim_proto_li8-wut-oldgas.root";
 
   // Parameter file name
-  TString parFile="./data/attpcpar_proto_li8-scat.root";
+  TString parFile="./data/attpcpar_proto_li8-wut-oldgas.root";
 
   // -----   Timer   --------------------------------------------------------
   TStopwatch timer;
@@ -105,10 +106,10 @@ void li8_sim(Int_t nEvents = 1000, TString mcEngine = "TGeant4")
 	              Int_t m = 1;   // Multiplicity  NOTE: Due the limitation of the TGenPhaseSpace accepting only pointers/arrays the maximum multiplicity has been set to 10 particles.
 	              Double_t px = 0.000/a;  // X-Momentum / per nucleon!!!!!!
 	              Double_t py = 0.000/a;  // Y-Momentum / per nucleon!!!!!!
-	              Double_t pz = 0.504708/a;  // Z-Momentum / per nucleon!!!!!!
+	              Double_t pz = 0.546663/a;//0.504708/a;  // Z-Momentum / per nucleon!!!!!!
   	            Double_t BExcEner = 0.0;
-                Double_t Bmass = 7.483551; //Mass in GeV
-                Double_t NomEnergy = 17.0; //Nominal Energy of the beam: Only used for cross section calculation (Tracking energy is determined with momentum). TODO: Change this to the energy after the IC
+                Double_t Bmass = 7.47138; //Mass in GeV
+                Double_t NomEnergy = 20.0; //Nominal Energy of the beam: Only used for cross section calculation (Tracking energy is determined with momentum). TODO: Change this to the energy after the IC
                 Double_t TargetMass = 3.728401;//Mass in GeV
 
 
@@ -182,7 +183,7 @@ void li8_sim(Int_t nEvents = 1000, TString mcEngine = "TGeant4")
                  Pyp.push_back(0.0);
 		             Pzp.push_back(0.0);
                  Mass.push_back(m2);
-		             ExE.push_back(0.0);//In MeV
+		             ExE.push_back(Exec);//In MeV
 
 
                   Double_t ThetaMinCMS = 0.0;

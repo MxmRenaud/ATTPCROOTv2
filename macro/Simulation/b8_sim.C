@@ -4,7 +4,7 @@ void b8_sim(Int_t nEvents = 1000, TString mcEngine = "TGeant4")
   TString dir = getenv("VMCWORKDIR");
   
   //README !!!!!!
-  Int_t scatFus =  3;//0= scattering, 1= 40Ar(8B,p)47Ti, 2= 40Ar(8B,n)47V, 3= 40Ar(8B,7Be)41K
+  Int_t scatFus =  2;//0= scattering, 1= 40Ar(8B,p)47Ti, 2= 40Ar(8B,n)47V, 3= 40Ar(8B,7Be)41K
   Double_t z1,z2,a1,a2,m1,m2;
   if (scatFus == 0){//i = 1 -> "scattered", i = 2 -> "recoil"
   cout<<endl<<"scatFus = "<<scatFus<<endl;

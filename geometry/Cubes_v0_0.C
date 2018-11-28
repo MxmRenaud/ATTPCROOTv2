@@ -54,6 +54,11 @@ const Float_t chamber_side = 42.;
 const Float_t chamber_height = 50.;
 const Float_t chamber_thickness = 1.; // 40 cm - 1 cm of thickness
 
+// Chamber entry window
+const Float_t window_depth = 5.8;
+const Float_t window_width = 14.;
+const Float_t window_thick = 1.;
+
 /*//FC rings
 const Float_t fc_inner_ring_idiam = 0.0;
 const Float_t fc_inner_ring_odiam = 0.5;
@@ -164,11 +169,28 @@ TGeoVolume* create_detector()
   TGeoMedium* gas   = gGeoMan->GetMedium(MediumGas);
   TGeoMedium* fc = gGeoMan->GetMedium(FieldCageCub);
   TGeoMedium* fc_rings_med = gGeoMan->GetMedium(fc_rings);
+  TGeoMedium* bulk_entry_window = gGeoMan->GetMedium(MediumVacuum);
 
-  TGeoVolume *drift_volume = gGeoManager->MakeBox("drift_volume", gas,chamber_height,chamber_side,chamber_side);
-  //TGeoVolume *drift_volume = gGeoManager->MakeBox("drift_volume", gas,  100./2, 100./2, 100./2);
+  TGeoVolume *drift_volume = gGeoManager->MakeBox("drift_volume", gas,chamber_height,chamber_side,chamber_side - window_depth);
+  
   gGeoMan->GetVolume(geoVersion)->AddNode(drift_volume,1, new TGeoTranslation(0,0,0));
   drift_volume->SetTransparency(80);
+  drift_volume->SetLineColor(4);
+
+  
+  
+  /*<OLD OR SCRAPPED:>
+  //TGeoVolume *drift_volume = gGeoManager->MakeBox("drift_volume", gas,  100./2, 100./2, 100./2);
+
+  //Make the Cubes: create shapes, set rotations(no rotation for now), create composite
+  TGeoTube entry_window_vol = new TGeoTube("T",0,window_width,window_depth/2.);
+  TGeoBBox box_volume = new TGeoBBox("B",chamber_height/2.,chamber_side/2.,chamber_side/2.);
+  
+  TGeoVolume *drift_volume = new TGeoVolume("drift_volume", box_volume);
+  </OLD OR SCRAPPED:>*/
+  
+  
+  
   
 /*  //Field cage 
   TGeoVolume *fc_volume1 = gGeoManager->MakeBox("fc_volume",fc,drift_length,field_side,field_side);

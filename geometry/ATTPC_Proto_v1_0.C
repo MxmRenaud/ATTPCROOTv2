@@ -32,7 +32,7 @@ const TString FileName1 = geoVersion + "_geomanager.root";
 const TString MediumGas     = "heco2";
 const TString CylinderVolumeMedium = "steel";
 const TString MediumVacuum = "vacuum4";
-const TString FieldCageCyl = "G10";
+const TString FieldCageCyl = "G10";//"He_04bar";
 const TString fc_rings = "Aluminum";
 
 // Distance of the center of the first detector layer [cm];
@@ -142,7 +142,7 @@ void create_materials_from_media_file()
   FairGeoMedium* steel          = geoMedia->getMedium("steel");
   FairGeoMedium* heco2          = geoMedia->getMedium("heco2");
   FairGeoMedium* vacuum4          = geoMedia->getMedium("vacuum4");
-  FairGeoMedium* G10          = geoMedia->getMedium("G10");
+  FairGeoMedium* G10          = geoMedia->getMedium("G10");//("He_04bar");
   FairGeoMedium* Aluminum   = geoMedia->getMedium("Aluminum");
 
   // include check if all media are found

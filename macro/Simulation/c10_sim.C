@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 void c10_sim(Int_t nEvents = 100, TString mcEngine = "TGeant4")
+=======
+void c10_sim(Int_t nEvents = 20000, TString mcEngine = "TGeant4")
+>>>>>>> 879025c3d85bea442687c40eba9d539aacadacea
 {
 
   TString dir = getenv("VMCWORKDIR");

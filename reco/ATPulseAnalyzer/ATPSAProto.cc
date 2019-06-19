@@ -34,7 +34,7 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
 
   Int_t iPad = 0;
 
-  #pragma omp parallel for ordered schedule(dynamic,1) private(iPad)
+  //#pragma omp parallel for ordered schedule(dynamic,1) private(iPad)
   for (iPad = 0; iPad < numPads; iPad++) {
 
 
@@ -46,11 +46,22 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
       Bool_t fValidBuff = kTRUE;
       Bool_t fValidThreshold = kTRUE;
 
-    Double_t xPos     = pad -> GetPadXCoord();
-    Double_t yPos     = pad -> GetPadYCoord();
-    Double_t zPos     = 0;
-    Double_t zPosCorr = 0.0;
-    Double_t charge   = 0;
+      Double_t xPos     = pad -> GetPadXCoord();
+      Double_t yPos     = pad -> GetPadYCoord();
+      Double_t zPos     = 0;
+      Double_t zPosCorr = 0.0;
+      Double_t charge   = 0;
+
+      if((xPos<-9000 || yPos<-9000) && !pad->IsAux() )
+      {
+          //std::cout<<" Is Auxiliary? "<<pad->IsAux()<<" Pad Num "<<PadNum<<"\n";
+          continue; //Skip invalid pads that are not
+      }else if(pad->IsAux()){
+
+        //std::cout<<" Is Auxiliary 2? "<<pad->IsAux()<<" Pad Num "<<PadNum<<"\n";
+        event->AddAuxPad(pad);
+        continue;
+      }   
 
     if (!(pad -> IsPedestalSubtracted())) {
       fLogger -> Error(MESSAGE_ORIGIN, "Pedestal should be subtracted to use this class!");
@@ -67,7 +78,6 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
       for (Int_t iTb = 0; iTb < fNumTbs; iTb++){
           floatADC[iTb] = adc[iTb];
           QHitTot+=adc[iTb];
-
       }
 
       TSpectrum *PeakFinder = new TSpectrum;
@@ -96,36 +106,34 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
       if(numPeaks>0) maxAdcIdx = (Int_t)(ceil((PeakFinder -> GetPositionX())[iPeak]));
       else if(numPeaks==0){
 
-        for (Int_t ij = 20; ij < 500; ij++) //Excluding first and last 10 Time Buckets
-        {
-         //if(PadNum==9788) std::cout<<" Time Bucket "<<i<<" floatADC "<<floatADC[i]<<std::endl;
-
-          if (floatADC[ij] > max)
-           {
-             max = floatADC[ij];
-             maxTime = ij;
-
-          }
-        }
-
-        maxAdcIdx = maxTime;
-
-      }//if numPeaks
-
-              Double_t TBCorr=0.0;
-              Double_t TB_TotQ = 0.0;
-          // Time Correction by Center of Gravity
-
-            if(maxAdcIdx>11){
-              for(Int_t i=0;i<11;i++){
-
-                  TBCorr  += floatADC[maxAdcIdx-i+5]*(maxAdcIdx-i+5);
-                  TB_TotQ += floatADC[maxAdcIdx-i+5];
-
+            //if no peaks are found, find the maximum value
+            for (Int_t ij = 20; ij < 500; ij++) //Excluding first and last 10 Time Buckets
+            {
+              if (floatADC[ij] > max)
+               {
+                 max = floatADC[ij];
+                 maxTime = ij;
               }
             }
 
-            TBCorr = TBCorr/TB_TotQ;
+            maxAdcIdx = maxTime;
+
+      }//if numPeaks
+
+              // Time Correction by Center of Gravity
+              Double_t TBCorr=0.0;
+              Double_t TB_TotQ = 0.0;
+        
+              if(maxAdcIdx>11){
+                for(Int_t i=0;i<11;i++){
+
+                    TBCorr  += floatADC[maxAdcIdx-i+5]*(maxAdcIdx-i+5);
+                    TB_TotQ += floatADC[maxAdcIdx-i+5];
+
+                }
+              }
+
+              TBCorr = TBCorr/TB_TotQ;
 
       zPos     = CalculateZGeo(maxAdcIdx);
       zPosCorr = CalculateZGeo(TBCorr);
@@ -134,8 +142,9 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
 
       //#pragma omp ordered
       //std::cout<<" Pad Num : "<<PadNum<<" Peak : "<<iPeak<<"/"<<numPeaks<<" - Charge : "<<charge<<" - zPos : "<<zPos<<std::endl;
+      //std::cout<<" xPos : "<<xPos<<" yPos : "<<yPos<<"\n";
 
-        if (fThreshold > 0 && charge < fThreshold)// TODO: Does this work when the polarity is negative??
+        if (fThreshold > 0 && charge < fThreshold )// TODO: Does this work when the polarity is negative??
             fValidThreshold = kFALSE;
 
       //if (zPos > 0 || zPos < -fMaxDriftLength)
@@ -143,7 +152,10 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
        // continue;
 
      if(fValidThreshold){
-      if(iPeak==0) QEventTot+=QHitTot; //Sum only if Hit is valid - We only sum once (iPeak==0) to account for the whole spectrum.
+      
+          if(iPeak==0) 
+              for (Int_t iTb = fIniTB; iTb < fEndTB; iTb++) 
+                    if(adc[iTb]>fThreshold) QEventTot+=adc[iTb]; //Sum only if Hit is valid - We only sum once (iPeak==0) to account for the whole spectrum.
         //std::cout<<" maxAdcIdx : "<<maxAdcIdx<<" TBCorr : "<<TBCorr<<std::endl;
         //std::cout<<zPos<<"    "<<zPosCorr<<std::endl;
       ATHit *hit = new ATHit(PadNum,hitNum, xPos, yPos, zPos, charge);
@@ -160,20 +172,15 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
       //std::cout<<" Hit Num : "<<hitNum<<"  - Hit Pos Rho2 : "<<HitPos.Mag2()<<"  - Hit Pos Rho : "<<HitPos.Mag()<<std::endl;
       //std::cout<<" Hit Coordinates : "<<xPos<<"  -  "<<yPos<<" - "<<zPos<<"  -  "<<std::endl;
       //std::cout<<" Is Pad"<<pad->GetPadNum()<<" Valid? "<<pad->GetValidPad()<<std::endl;
-      #pragma omp ordered
+      //#pragma omp ordered
       event -> AddHit(hit);
       delete hit;
-      #pragma omp ordered
+      //#pragma omp ordered
       hitNum++;
 
-                if(PadHitNum==1){ //Construct mesh signal only once
+                if(PadHitNum==1){ //Construct mesh signal only once per PAD
                 	for (Int_t iTb = 0; iTb < fNumTbs; iTb++){
-                		mesh[iTb]+=floatADC[iTb];
-                		/* if(iTb==511){
-                		 std::cout<<" IPad : "<<iPad<<std::endl;
-                		 std::cout<<" iTb : "<<iTb<<" FloatADC : "<<floatADC[iTb]<<" mesh : "<<mesh[iTb]<<std::endl;
-                		}*/
-
+                		if(adc[iTb]>fThreshold) mesh[iTb]+=floatADC[iTb];
                 	}
                 }
 
@@ -182,7 +189,7 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
     }// Peak loop
 
 
-     #pragma omp ordered
+     //#pragma omp ordered
      PadMultiplicity.insert(std::pair<Int_t,Int_t>(PadNum,PadHitNum));
 
 
@@ -192,8 +199,10 @@ ATPSAProto::Analyze(ATRawEvent *rawEvent, ATEvent *event)
    delete PeakFinder;
 
   }// Pad loop
+
+    //std::vector<ATPad> *auxPadArray = event->GetAuxPadArray();
     // std::cout<<"  --------------------------------- "<<std::endl;
-     //std::cout<<" Rho2 : "<<Rho2<<" - RhoMean : "<<RhoMean<<" Num of Hits : "<<event->GetNumHits()<<std::endl;
+     //std::cout<<" Rho2 : "<<Rho2<<" - RhoMean : "<<RhoMean<<" Num of Hits : "<<event->GetNumHits()<<" - Number of auxiliary pads : "<<auxPadArray->size()<<std::endl;
      RhoVariance = Rho2 - ( pow(RhoMean,2)/(event->GetNumHits()) );
      RhoVariance = Rho2 - ( event->GetNumHits()*pow((RhoMean/event->GetNumHits()),2) ) ;
      //std::cout<<" Rho Variance : "<<RhoVariance<<std::endl;

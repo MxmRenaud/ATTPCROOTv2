@@ -45,7 +45,7 @@ std::tuple<hid_t, hsize_t> ATHDFParser::open_group(hid_t fileId, char const* gro
       H5Gget_num_objs(groupId, &size);
 
       //Determining the first event
-      std::vector<unsigned long int> events;
+      /*std::vector<unsigned long int> events;
       int cnt = 0;
       
       for(auto isize=0;isize<size;++isize)
@@ -53,13 +53,16 @@ std::tuple<hid_t, hsize_t> ATHDFParser::open_group(hid_t fileId, char const* gro
 	      char name[100];
 	      H5Lget_name_by_idx(groupId,".",H5_INDEX_NAME, H5_ITER_INC,isize,name,100, H5P_DEFAULT);
 	      events.push_back(std::atoi(name));
+        std::string name_string(name);
+        std::cout<<name_string<<" "<<groupId<<"\n";
+        _eventsbyname.push_back(name_string);
 	      ++cnt;
 	  }
 
 	 std::vector<unsigned long int>::iterator result = std::min_element(std::begin(events), std::end(events));
      _inievent = events.at(std::distance(std::begin(events), result));
 
-     //std::cout<<" Minimum "<<_inievent<<" Position "<<std::distance(std::begin(events), result)<<" Size "<<events.size()<<"\n";
+     //std::cout<<" Minimum "<<_inievent<<" Position "<<std::distance(std::begin(events), result)<<" Size "<<events.size()<<"\n";*/
 
       return std::make_tuple(groupId, size);
     }
@@ -124,9 +127,23 @@ std::size_t ATHDFParser::open(char const* file)
     return std::get<1>(group_n_entries);
 }
 
-std::size_t ATHDFParser::n_pads(std::size_t i_raw_event)
+ std::string ATHDFParser::get_event_name(std::size_t idx)
+ {
+    if (_group >= 0)
+    {
+       char name[100];
+       H5Lget_name_by_idx(_group,".",H5_INDEX_NAME, H5_ITER_INC,idx,name,100, H5P_DEFAULT);
+       std::string name_string(name);
+       return name_string;
+    }else{
+      std::cerr << "> ATHDFParser::get_event_name:ERROR, invalid ID  " << idx << '\n';
+      return "invalid";
+    }
+ }
+
+std::size_t ATHDFParser::n_pads(std::string i_raw_event)
 {
-    std::string dataset_name = std::to_string(i_raw_event);
+    std::string dataset_name = i_raw_event;
     auto dataset_dims = open_dataset(_group, dataset_name.c_str());
     if (std::get<0>(dataset_dims)==0) return 0;
     _dataset = std::get<0>(dataset_dims);
@@ -144,7 +161,7 @@ std::vector<int16_t> ATHDFParser::pad_raw_data(std::size_t i_pad)
     return datav;
 }
 
-unsigned long int ATHDFParser::inievent()
+std::size_t ATHDFParser::inievent()
 {
 	return _inievent;
 }

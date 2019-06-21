@@ -111,7 +111,7 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 10000, TString mcEngine = "TGeant4"
   ExE.push_back(BExcEner);
   
   // ---- Target ----
-  Zp.push_back(2); // p
+  Zp.push_back(2); // He
   Ap.push_back(4); //
   Qp.push_back(0); //
   Pxp.push_back(0.0);

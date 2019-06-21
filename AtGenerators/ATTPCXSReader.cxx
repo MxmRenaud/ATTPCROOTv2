@@ -173,6 +173,133 @@ ATTPCXSReader::ATTPCXSReader(const char* name,std::vector<Int_t> *z,std::vector<
   }
 }
 
+
+//fusion reaction version - EDIT: Maxime Renaud
+ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameReac, Double_t energ, std::vector<Int_t> *z,std::vector<Int_t> *a,std::vector<Int_t> *q,
+			     Int_t mult, std::vector<Double_t> *px,std::vector<Double_t>* py,std::vector<Double_t> *pz,
+			     std::vector<Double_t> *mass)
+  : fMult(0),
+    fPx(0.), fPy(0.), fPz(0.),
+    fVx(0.), fVy(0.), fVz(0.),
+    fIon(0),fPType(0.),fQ(0) {
+  
+  fgNIon++;
+  fMult = mult;
+  fIon.reserve(fMult);
+  
+  SetXSFileName(nameReac);//give the file name except for energy
+  
+  TString whichEnergyRange;
+  for (int energyCheck = 0;energyCheck<fBeamEnergy;energyCheck++){ //TODO check legality of fBeamEnergy invocing here
+	  if (energyCheck >= energ){whichEnergyRange = std::to_string(energyCheck-1);} //TODO check details once you know energy resolution 
+  }
+  
+  TString dir = getenv("VMCWORKDIR");
+  TString XSFileName = dir+"/AtGenerators/"+wichEnergyRange+"_"+fXSFileName;
+  std::cout << " ATTPCXSReader: Opening input file " << XSFileName << std::endl;
+  std::ifstream*  fInputXSFile = new std::ifstream(XSFileName);
+  //std::ifstream*  fInputXSFile = new std::ifstream("/home/ayyadlim/fair_install/ATTPCROOTv2_HAP/AtGenerators/xs_22Mgp_fusionEvaporation.txt");
+  if ( ! fInputXSFile->is_open() )
+    Fatal("ATTPCXSReader","Cannot open input file.");
+  
+  std::cout << "ATTPCXSReader: opening PACE cross sections..." << std::endl;
+
+  Double_t ene[31];
+  Double_t xs[31][18];
+  
+  //fixed format
+  for(Int_t energies=0;energies<31;energies++){
+    *  >> ene[energies];
+    //std::cout << ene[energies] << " ";
+    for(Int_t xsvalues=0;xsvalues<18;xsvalues++){
+      *fInputXSFile >> xs[energies][xsvalues];
+      //std::cout << xs[energies][xsvalues]<< " ";
+    }
+    //std::cout << std::endl;
+  }
+
+  fh_pdf = new TH2F("pdf","pdf",31,0,31,18,0,180);
+  for(Int_t energies=0;energies<31;energies++){
+    for(Int_t xsvalues=0;xsvalues<18;xsvalues++){
+      fh_pdf->SetBinContent(energies+1,xsvalues+1,xs[energies][xsvalues]);
+    }
+  }
+  //fh_pdf->Write();
+  
+  TDatabasePDG* pdgDB = TDatabasePDG::Instance();
+  TParticlePDG* kProtonPDG = pdgDB->GetParticle(2212);
+  TParticle* kProton = new TParticle();
+  kProton->SetPdgCode(2212);
+  
+  TParticle* kNeutron = new TParticle();
+  kNeutron->SetPdgCode(2112);
+  
+  char buffer[20];
+  for(Int_t i=0;i<fMult;i++){
+    fPx.push_back( Double_t(a->at(i)) * px->at(i) );
+    fPy.push_back( Double_t(a->at(i)) * py->at(i) );
+    fPz.push_back( Double_t(a->at(i)) * pz->at(i) );
+    Masses.push_back(mass->at(i)*1000.0);
+    fWm.push_back( mass->at(i)*1000.0);
+    FairIon *IonBuff;
+    FairParticle *ParticleBuff;
+    sprintf(buffer, "Product_Ion%d", i);
+    
+    if( a->at(i)!=1  ){  
+      IonBuff = new FairIon(buffer, z->at(i), a->at(i), q->at(i),0.0,mass->at(i));
+      ParticleBuff = new FairParticle("dummyPart",1,1,1.0,0,0.0,0.0);
+      fPType.push_back("Ion");
+      std::cout<<" Adding : "<<buffer<<std::endl;
+    }
+    else if( a->at(i)==1 && z->at(i)==1  ){
+      IonBuff = new FairIon("dummyIon",50,50,0,0.0,100); // We fill the std::vector with a dummy ion
+      ParticleBuff = new FairParticle(2212,kProton);
+      fPType.push_back("Proton");
+    }
+    else if( a->at(i)==1 && z->at(i)==0  ){
+      IonBuff = new FairIon("dummyIon",50,50,0,0.0,100); // We fill the std::vector with a dummy ion
+      ParticleBuff = new FairParticle(2112,kNeutron);
+      fPType.push_back("Neutron");
+    }
+    
+    std::cout<<" Z "<<z->at(i)<<" A "<<a->at(i)<<std::endl;
+    //std::cout<<buffer<<std::endl;
+    fIon.push_back(IonBuff);
+    fParticle.push_back(ParticleBuff);
+  }
+
+  FairRunSim* run = FairRunSim::Instance();
+  if ( ! run ) {
+    std::cout << "-E- FairIonGenerator: No FairRun instantised!" << std::endl;
+    Fatal("FairIonGenerator", "No FairRun instantised!");
+  }
+  
+  
+  for(Int_t i=0;i<fMult;i++){  
+    if(fPType.at(i)=="Ion"){
+      std::cout<<" In position "<<i<<" adding an : "<<fPType.at(i)<<std::endl;
+      run->AddNewIon(fIon.at(i));
+      std::cout<<" fIon name :"<<fIon.at(i)->GetName()<<std::endl;
+      std::cout<<" fParticle name :"<<fParticle.at(i)->GetName()<<std::endl;
+    }
+    else if(fPType.at(i)=="Proton"){
+      std::cout<<" In position "<<i<<" adding an : "<<fPType.at(i)<<std::endl;
+      //run->AddNewParticle(fParticle.at(i));
+      std::cout<<" fIon name :"<<fIon.at(i)->GetName()<<std::endl;
+      std::cout<<" fParticle name :"<<fParticle.at(i)->GetName()<<std::endl;
+      std::cout<<fParticle.at(i)->GetName()<<std::endl;
+    }
+    else if(fPType.at(i)=="Neutron"){  
+      std::cout<<" In position "<<i<<" adding an : "<<fPType.at(i)<<std::endl;
+      //run->AddNewParticle(fParticle.at(i));
+      std::cout<<" fIon name :"<<fIon.at(i)->GetName()<<std::endl;
+      std::cout<<" fParticle name :"<<fParticle.at(i)->GetName()<<std::endl;
+      std::cout<<fParticle.at(i)->GetName()<<std::endl;
+    } 
+  }
+}
+
+
 ATTPCXSReader::~ATTPCXSReader() {
   //
 }
@@ -196,7 +323,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
   
   fBeamEnergy = gATVP->GetEnergy();
   
-  //Requires a non zero vertex energy and pre-generated Beam event (not punch thorugh)
+  //Requires a non zero vertex energy and pre-generated Beam event (not punch through)
   if(gATVP->GetEnergy()>0 && gATVP->GetDecayEvtCnt()%2!=0){
     //proton parameters come from the XS PDF
     Double_t energyFromPDF, thetaFromPDF;

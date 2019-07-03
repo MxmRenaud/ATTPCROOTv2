@@ -65,6 +65,8 @@ ATTPCXSReader::ATTPCXSReader(const char* name,std::vector<Int_t> *z,std::vector<
   fgNIon++;
   fMult = mult;
   fIon.reserve(fMult);
+  fIsResonnace = 2; 			//for compatibility with ReadEvent().
+  fWhichDecayChannel = 99;	//for compatibility with ReadEvent().
 
   SetXSFileName();
   
@@ -173,9 +175,9 @@ ATTPCXSReader::ATTPCXSReader(const char* name,std::vector<Int_t> *z,std::vector<
   }
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //fusion reaction version - EDIT: Maxime Renaud
-ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameReac, Double_t energ, std::vector<Int_t> *z,std::vector<Int_t> *a,std::vector<Int_t> *q,
+ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameProjTargReac, std::vector<Int_t> *z,std::vector<Int_t> *a,std::vector<Int_t> *q,
 			     Int_t mult, std::vector<Double_t> *px,std::vector<Double_t>* py,std::vector<Double_t> *pz,
 			     std::vector<Double_t> *mass)
   : fMult(0),
@@ -184,47 +186,102 @@ ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameReac, Double_t en
     fIon(0),fPType(0.),fQ(0) {
   
   fgNIon++;
-  fMult = mult;
+  fMult = mult;    
   fIon.reserve(fMult);
   
-  SetXSFileName(nameReac);//give the file name except for energy
+  SetXSFileName(nameProjTargReac);//give the file name except for energy
+  SetDecayChanFileName();
   
-  TString whichEnergyRange;
-  for (int energyCheck = 0;energyCheck<fBeamEnergy;energyCheck++){ //TODO check legality of fBeamEnergy invocing here
-	  if (energyCheck >= energ){whichEnergyRange = std::to_string(energyCheck-1);} //TODO check details once you know energy resolution 
-  }
   
   TString dir = getenv("VMCWORKDIR");
-  TString XSFileName = dir+"/AtGenerators/"+wichEnergyRange+"_"+fXSFileName;
+  TString XSFileName = dir+"/AtGenerators/"+fXSFileName+"-3hOmega.txt";//ex: 8B_40Ar-fusion-3hOmega.txt (Energy, recoil energy, CrossSec, Excitation)
   std::cout << " ATTPCXSReader: Opening input file " << XSFileName << std::endl;
   std::ifstream*  fInputXSFile = new std::ifstream(XSFileName);
-  //std::ifstream*  fInputXSFile = new std::ifstream("/home/ayyadlim/fair_install/ATTPCROOTv2_HAP/AtGenerators/xs_22Mgp_fusionEvaporation.txt");
-  if ( ! fInputXSFile->is_open() )
-    Fatal("ATTPCXSReader","Cannot open input file.");
+  if ( ! fInputXSFile->is_open() ) Fatal("ATTPCXSReader","Cannot open input file.");
+  
+  TSring DecayChannel = dir+"/AtGenerators/"+fDecayChanFileName;
+  std::cout<< " ATTPCXReader: Opening input file " << DecayChannel <<std::endl;// energy, prob, number of parts emitted, number of protons
+  std::ifstream*  fInputDCFile = new std::ifstream(DecayChannel);
+  if ( ! fInputDCFile->is_open() ) Fatal("ATTPCXSReader","Cannot open input file.");
+  
   
   std::cout << "ATTPCXSReader: opening PACE cross sections..." << std::endl;
-
-  Double_t ene[31];
-  Double_t xs[31][18];
   
-  //fixed format
-  for(Int_t energies=0;energies<31;energies++){
-    *  >> ene[energies];
-    //std::cout << ene[energies] << " ";
-    for(Int_t xsvalues=0;xsvalues<18;xsvalues++){
-      *fInputXSFile >> xs[energies][xsvalues];
-      //std::cout << xs[energies][xsvalues]<< " ";
+  
+
+  Double_t ene[122];
+  Double_t crossSec[122][2];
+  Double_t decayChan[10][13];
+  Double_t ExecEnerg;
+  
+  //!format is fixed!
+  for(Int_t energies=0;energies<122;energies++){//TODO change those values to accomodate other reactions
+    *fInputXSFile  >> ene[energies];
+    for(Int_t recoilNcrossSec=0;recoilNcrossSec<2;recoilNcrossSec++){
+      *fInputXSFile >> crossSec[energies][recoilNcrossSec];
     }
-    //std::cout << std::endl;
+    *fInputXSFile >> ExecEnerg;
+  }
+  
+  for (Int_t energies=0;energies<20;energies++){
+	  for (Int_t entries=0;entries<13;entries++){
+		  *fInputDCFile >> decayChan[enrgies][entries];
+	  }
   }
 
-  fh_pdf = new TH2F("pdf","pdf",31,0,31,18,0,180);
-  for(Int_t energies=0;energies<31;energies++){
-    for(Int_t xsvalues=0;xsvalues<18;xsvalues++){
-      fh_pdf->SetBinContent(energies+1,xsvalues+1,xs[energies][xsvalues]);
-    }
+  cs_fef = new TH1F("fef","fusExcitFct",122,8,20);//TODO is needed ? TODO change those values to accomodate other reactions?
+  fh_pdf = new TH2F("pdf","pdf",31,0,31,18,0,180); //NOTE for later; first determine energy of reaction, use cross-sec graph to determine if you go through with the reaction, if you propagate, etc. 
+  for(Int_t energies=0;energies<122;energies++){
+//     for(Int_t recoilNcrossSec=0;recoilNcrossSec<2;recoilNcrossSec++){
+      cs_fef->SetBinContent(energies,crossSec[energies][0]);
+//     }
   }
-  //fh_pdf->Write();
+ 
+/* NOTE IMPORTANT : unnecessary ? ReadEvent already seems to have some sort of "not now" condition. Uniform, but don't know how it works. NOTE that part may belong in ReadEvent()
+  //Check if event happens: gas density * cross sec is probability for 1 particle
+  Double_t temporaryDensVal = (1000/(39.948*0.9+16*0.1))*6.022*TMath::Power(10.,23.)*0.003*31330.8/(287.05*283.15); //1000/M*Na*depth(for 1 energy)*gasDensity [m^-2]
+  Double_t whatCS = cs_fef->GetBinContent(cs_fef->GetBin(energ))*TMath::Power(10.,-21.); //[m^2]
+  
+  if (temporaryDensVal*whatCS >= 1){
+	  std::cout<<"Somehow reaction probability was >= 1. Please check input."<<std::endl;
+	  Fatal("ARRPCXSReader","Reaction probability greater than one");
+  }
+  else{
+	  if(((double)rand())/RAND_MAX < temporaryDensVal*whatCS){
+		  std::cout<<"Generating fusion event... Current energy "<< >energy< <<std::endl;
+		  if (ExecEnerg < 0){//need to immediately decay
+			  fIsResonnace = 1; 
+			  
+		  }
+		  else {//need to generate compound (then decay ? TODO maybe later)
+			  fIsResonnace = 0; //generate neutron and proton, but no energy or momentum
+		  }
+	  }
+	  else {//TODO what if no reaction ?
+		  
+	  }
+  }*/
+  
+  Double_t decayChanSelection = ((Double_t)rand())/RAND_MAX;
+  Int_t decayEnergSelection = (Int_t) ((a->front())*((px->front())*(px->front())+(py->front())*(py->front())+(pz->front())*(pz->front()))/2);
+  if (decayEnergSelection < 10){//TODO implement REAL condition
+	  fMult = mult;
+	  fWhichDecayChannel = 0;
+  }
+  for (int i = 4;i > 1;i--){
+	  if (decayChan[decayEnergSelection-10][i*3-2]>decayChanSelection){//from least likely channel to most. If likelyness higher than random number between [0;1], select that channel
+		  fMult = decayChan[decayEnergSelection-10][i*3-1]+3;
+		  fWhichDecayChannel = i;
+		  fIsResonnace = 0; //NOTE: temporary until I implement the resonnance-or-not selection properly
+	  }
+	  else{//if not, select most likely channel
+		  fMult = decayChan[decayEnergSelection-10][2]+3;
+		  fWhichDecayChannel = 1;
+		  fIsResonnace = 0; //NOTE: temporary until I implement the resonnance-or-not selection properly
+	  }
+  }
+  std::cout<<" Selected Decay Channel number "<<fWhichDecayChannel<<"."<<std::endl;
+  
   
   TDatabasePDG* pdgDB = TDatabasePDG::Instance();
   TParticlePDG* kProtonPDG = pdgDB->GetParticle(2212);
@@ -315,7 +372,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
   fPx.clear();
   fPy.clear();
   fPx.clear();
-  fPx.resize(fMult);
+  fPx.resize(fMult); 
   fPy.resize(fMult);
   fPx.resize(fMult);
 
@@ -324,27 +381,52 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
   fBeamEnergy = gATVP->GetEnergy();
   
   //Requires a non zero vertex energy and pre-generated Beam event (not punch through)
-  if(gATVP->GetEnergy()>0 && gATVP->GetDecayEvtCnt()%2!=0){
+  if(gATVP->GetEnergy()>0 && gATVP->GetDecayEvtCnt()%2!=0 && fWhichDecayChannel != 0){
     //proton parameters come from the XS PDF
     Double_t energyFromPDF, thetaFromPDF;
-    fh_pdf->GetRandom2(energyFromPDF,thetaFromPDF);
-    
-    Ang.push_back(thetaFromPDF*TMath::Pi()/180); //set angle PROTON (in rad)
-    Ene.push_back(energyFromPDF); //set energy PROTON
-    
-    fPxBeam = gATVP->GetPx();
+	 
+	 fPxBeam = gATVP->GetPx();
     fPyBeam = gATVP->GetPy();
     fPzBeam = gATVP->GetPz();
     
-    Double_t eb = fBeamEnergy+fWm.at(0);//total (beam) projectile energy = projectile kinetic e + mass
-    Double_t pb2 = fBeamEnergy*fBeamEnergy+2.0*fBeamEnergy*fWm.at(0);//(beam) projectile momentum squared
-    Double_t pb = TMath::Sqrt(pb2);            //(beam)projectile momentum
-    //Double_t beta = pb/(eb+fWm.at(1));         // ??check beta of the projectile+target compound check??
+	 Double_t eb;			//total (beam) projectile energy = projectile kinetic e + mass
+	 Double_t pb2;			//(beam) projectile momentum squared  
+	 Double_t pb;			//(beam)projectile momentum
+	 //Double_t beta = pb/(eb+fWm.at(1));         // ??check beta of the projectile+target compound check??
     //Double_t gamma = 1.0/sqrt(1.0-beta*beta);
-    Double_t e = fBeamEnergy+fWm.at(0)+fWm.at(1);   //total energy (beam+target)
-    Double_t e_cm2 = e*e-pb2;                       //cm energy (beam+target) squared
-    Double_t e_cm = TMath::Sqrt(e_cm2);             //cm energy (beam+target)
-    Double_t t_cm = e_cm-fWm.at(2)-fWm.at(3);       //kinetic energy available for final products
+    Double_t e;			//total energy (beam+target)
+    Double_t e_cm2;		//cm energy (beam+target) squared
+    Double_t e_cm;		//cm energy (beam+target)
+    Double_t t_cm;		//kinetic energy available for final products
+    
+    
+    if (fIsResonnace == 2){ //select original ATTPCXSReader()
+		 fh_pdf->GetRandom2(energyFromPDF,thetaFromPDF);
+		 Ang.push_back(thetaFromPDF*TMath::Pi()/180); //set angle PROTON (in rad)
+		 Ene.push_back(energyFromPDF); //set energy PROTON
+		 
+		 eb = fBeamEnergy+fWm.at(0);
+		 pb2 = fBeamEnergy*fBeamEnergy+2.0*fBeamEnergy*fWm.at(0);
+		 pb = TMath::Sqrt(pb2);            
+		 e = fBeamEnergy+fWm.at(0)+fWm.at(1);   
+		 e_cm2 = e*e-pb2;                       
+		 e_cm = TMath::Sqrt(e_cm2);   
+		 t_cm = e_cm-fWm.at(2)-fWm.at(3);
+	 }
+	 else if (fIsResonnace == 0){//complete fusion, no decay TODO add proper decay
+		 energyFromPDF = 0.;
+		 Ang.push_back(0.);//set proton angle (want no proton)
+		 Ene.push_back(0.);//set proton energy (want no proton)
+		 
+		 eb = fBeamEnergy+fWm.at(0);
+		 pb2 = fBeamEnergy*fBeamEnergy+2.0*fBeamEnergy*fWm.at(0);
+		 pb = TMath::Sqrt(pb2);            
+		 e = fBeamEnergy+fWm.at(0)+fWm.at(1);   
+		 e_cm2 = e*e-pb2;                       
+		 e_cm = TMath::Sqrt(e_cm2);   
+		 t_cm = e_cm;//full energy available
+	 }
+	 
 
 
     //HERE REMAINS THE CALCULATION OF THE ANGLE OF THE SCATTER AS A FUNCTION OF THE
@@ -384,7 +466,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
     
     TVector3 direction2 = TVector3(sin(Ang.at(1))*cos(phi2),
 				   sin(Ang.at(1))*sin(phi2),
-				   cos(Ang.at(1)));  //scatter
+				   cos(Ang.at(1)));  //scatter (ion)
 
     Double_t p2_recoil = Ene.at(0)*Ene.at(0)+2.0*Ene.at(0)*fWm.at(3);
     Double_t p2_scatter= Ene.at(1)*Ene.at(1)+2.0*Ene.at(1)*fWm.at(2);
@@ -433,7 +515,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
 		  << ", " << fVz << ") cm" << std::endl;
 	primGen->AddTrack(pdgType, fPx.at(i), fPy.at(i), fPz.at(i), fVx, fVy, fVz);
       }
-      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2212 && fPType.at(i)=="Proton" ){
+      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2212 && fPType.at(i)=="Proton" && fIsResonnace != 0){
 	std::cout << "-I- FairIonGenerator: Generating ions of type "
 		  << fParticle.at(i)->GetName() << " (PDG code " << pdgType << ")" << std::endl;
 	std::cout << "    Momentum (" << fPx.at(i) << ", " << fPy.at(i) << ", " << fPz.at(i)
@@ -441,7 +523,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
 		  << ", " << fVz << ") cm" << std::endl;
 	primGen->AddTrack(pdgType, fPx.at(i), fPy.at(i), fPz.at(i), fVx, fVy, fVz);	
       }
-      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2112 && fPType.at(i)=="Neutron" ){
+      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2112 && fPType.at(i)=="Neutron" fIsResonnace != 0){
 	std::cout << "-I- FairIonGenerator: Generating ions of type "
 		  << fParticle.at(i)->GetName() << " (PDG code " << pdgType << ")" << std::endl;
 	std::cout << "    Momentum (" << fPx.at(i) << ", " << fPy.at(i) << ", " << fPz.at(i)

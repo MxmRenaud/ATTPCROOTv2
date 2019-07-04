@@ -52,7 +52,7 @@ TGeoVolume* create_detector();
 void position_detector();
 void add_alignable_volumes();
 
-void ATTPC_v1_1() {
+void ATTPC_e15250_v1() { //ATTPC_v1_1()
   // Load the necessary FairRoot libraries
  // gROOT->LoadMacro("$VMCWORKDIR/gconfig/basiclibs.C");
  // basiclibs();

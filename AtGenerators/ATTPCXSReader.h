@@ -29,6 +29,10 @@ class ATTPCXSReader : public FairGenerator{
   ATTPCXSReader(const char* name, std::vector<Int_t> *z, std::vector<Int_t> *a, std::vector<Int_t> *q, Int_t mult,
 		std::vector<Double_t> *px, std::vector<Double_t>* py, std::vector<Double_t> *pz,
 		std::vector<Double_t> *mass);
+  
+  ATTPCXSReader(const char* name, const char* nameReac, std::vector<Int_t> *z, std::vector<Int_t> *a, std::vector<Int_t> *q,
+		Int_t mult, std::vector<Double_t> *px, std::vector<Double_t>* py, std::vector<Double_t> *pz,
+		std::vector<Double_t> *mass);
 
   ATTPCXSReader& operator=(const ATTPCXSReader&) { return *this; }
 
@@ -44,10 +48,12 @@ class ATTPCXSReader : public FairGenerator{
 
     /** Modifiers **/
   void SetXSFileName(TString name="xs_22Mgp_fusionEvaporation.txt"){fXSFileName=name;}
+  void SetDecayChanFileName(TString name="48V-residual_decay.txt"){fDecayChanFileName=name;}
 
 private:
   
   TString fXSFileName;
+  TString fDecayChanFileName;
 
   static Int_t fgNIon;      //! Number of the instance of this class
   Int_t    fMult;                           // Multiplicity per event
@@ -66,6 +72,9 @@ private:
   std::vector<Double_t> fWm;                                 // Total mass
 
   TH2F* fh_pdf;
+  TH1F* cs_fef;
+  Bool_t fIsResonnance;			//0 if fusion to stable, 1 for immediate decay
+  Int_t fWhichDecayChannel;	//0 no reaction, 1->4 from most to less likely channel
   
   ClassDef(ATTPCXSReader,1)
 }; 

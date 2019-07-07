@@ -65,7 +65,7 @@ ATTPCXSReader::ATTPCXSReader(const char* name,std::vector<Int_t> *z,std::vector<
   fgNIon++;
   fMult = mult;
   fIon.reserve(fMult);
-  fIsResonnace = 2; 			//for compatibility with ReadEvent().
+  fIsResonnance = 2; 			//for compatibility with ReadEvent().
   fWhichDecayChannel = 99;	//for compatibility with ReadEvent().
 
   SetXSFileName();
@@ -199,7 +199,7 @@ ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameProjTargReac, std
   std::ifstream*  fInputXSFile = new std::ifstream(XSFileName);
   if ( ! fInputXSFile->is_open() ) Fatal("ATTPCXSReader","Cannot open input file.");
   
-  TSring DecayChannel = dir+"/AtGenerators/"+fDecayChanFileName;
+  TString DecayChannel = dir+"/AtGenerators/"+fDecayChanFileName;
   std::cout<< " ATTPCXReader: Opening input file " << DecayChannel <<std::endl;// energy, prob, number of parts emitted, number of protons
   std::ifstream*  fInputDCFile = new std::ifstream(DecayChannel);
   if ( ! fInputDCFile->is_open() ) Fatal("ATTPCXSReader","Cannot open input file.");
@@ -225,7 +225,7 @@ ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameProjTargReac, std
   
   for (Int_t energies=0;energies<20;energies++){
 	  for (Int_t entries=0;entries<13;entries++){
-		  *fInputDCFile >> decayChan[enrgies][entries];
+		  *fInputDCFile >> decayChan[energies][entries];
 	  }
   }
 
@@ -250,11 +250,11 @@ ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameProjTargReac, std
 	  if(((double)rand())/RAND_MAX < temporaryDensVal*whatCS){
 		  std::cout<<"Generating fusion event... Current energy "<< >energy< <<std::endl;
 		  if (ExecEnerg < 0){//need to immediately decay
-			  fIsResonnace = 1; 
+			  fIsResonnance = 1; 
 			  
 		  }
 		  else {//need to generate compound (then decay ? TODO maybe later)
-			  fIsResonnace = 0; //generate neutron and proton, but no energy or momentum
+			  fIsResonnance = 0; //generate neutron and proton, but no energy or momentum
 		  }
 	  }
 	  else {//TODO what if no reaction ?
@@ -272,12 +272,12 @@ ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameProjTargReac, std
 	  if (decayChan[decayEnergSelection-10][i*3-2]>decayChanSelection){//from least likely channel to most. If likelyness higher than random number between [0;1], select that channel
 		  fMult = decayChan[decayEnergSelection-10][i*3-1]+3;
 		  fWhichDecayChannel = i;
-		  fIsResonnace = 0; //NOTE: temporary until I implement the resonnance-or-not selection properly
+		  fIsResonnance = 0; //NOTE: temporary until I implement the resonnance-or-not selection properly
 	  }
 	  else{//if not, select most likely channel
 		  fMult = decayChan[decayEnergSelection-10][2]+3;
 		  fWhichDecayChannel = 1;
-		  fIsResonnace = 0; //NOTE: temporary until I implement the resonnance-or-not selection properly
+		  fIsResonnance = 0; //NOTE: temporary until I implement the resonnance-or-not selection properly
 	  }
   }
   std::cout<<" Selected Decay Channel number "<<fWhichDecayChannel<<"."<<std::endl;
@@ -400,7 +400,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
     Double_t t_cm;		//kinetic energy available for final products
     
     
-    if (fIsResonnace == 2){ //select original ATTPCXSReader()
+    if (fIsResonnance == 2){ //select original ATTPCXSReader()
 		 fh_pdf->GetRandom2(energyFromPDF,thetaFromPDF);
 		 Ang.push_back(thetaFromPDF*TMath::Pi()/180); //set angle PROTON (in rad)
 		 Ene.push_back(energyFromPDF); //set energy PROTON
@@ -413,7 +413,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
 		 e_cm = TMath::Sqrt(e_cm2);   
 		 t_cm = e_cm-fWm.at(2)-fWm.at(3);
 	 }
-	 else if (fIsResonnace == 0){//complete fusion, no decay TODO add proper decay
+	 else if (fIsResonnance == 0){//complete fusion, no decay TODO add proper decay
 		 energyFromPDF = 0.;
 		 Ang.push_back(0.);//set proton angle (want no proton)
 		 Ene.push_back(0.);//set proton energy (want no proton)
@@ -515,7 +515,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
 		  << ", " << fVz << ") cm" << std::endl;
 	primGen->AddTrack(pdgType, fPx.at(i), fPy.at(i), fPz.at(i), fVx, fVy, fVz);
       }
-      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2212 && fPType.at(i)=="Proton" && fIsResonnace != 0){
+      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2212 && fPType.at(i)=="Proton" && fIsResonnance != 0){
 	std::cout << "-I- FairIonGenerator: Generating ions of type "
 		  << fParticle.at(i)->GetName() << " (PDG code " << pdgType << ")" << std::endl;
 	std::cout << "    Momentum (" << fPx.at(i) << ", " << fPy.at(i) << ", " << fPz.at(i)
@@ -523,7 +523,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
 		  << ", " << fVz << ") cm" << std::endl;
 	primGen->AddTrack(pdgType, fPx.at(i), fPy.at(i), fPz.at(i), fVx, fVy, fVz);	
       }
-      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2112 && fPType.at(i)=="Neutron" fIsResonnace != 0){
+      else if(i>1 && gATVP->GetDecayEvtCnt() && pdgType==2112 && fPType.at(i)=="Neutron" && fIsResonnance != 0){
 	std::cout << "-I- FairIonGenerator: Generating ions of type "
 		  << fParticle.at(i)->GetName() << " (PDG code " << pdgType << ")" << std::endl;
 	std::cout << "    Momentum (" << fPx.at(i) << ", " << fPy.at(i) << ", " << fPz.at(i)

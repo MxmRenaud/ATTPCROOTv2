@@ -293,8 +293,6 @@ ATTPCXSReader::ATTPCXSReader(const char* name, const char* nameProjTargReac, std
 		  fWhichDecayChannel = 1;
 	  }
 	  
-	  
-	  
 	  tempA = a->at(0)-fMult;
 	  tempZ = z->at(0)-fProtonMult;
 	  if(tempA%2 == 0 && tempZ%2 == 0){tempParity = -12./TMath::Sqrt(tempA);}

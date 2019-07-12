@@ -48,11 +48,14 @@ class ATTPCXSReader : public FairGenerator{
 
     /** Modifiers **/
   void SetXSFileName(TString name="xs_22Mgp_fusionEvaporation.txt"){fXSFileName=name;}
+  void SetFusExFctFileName(TString name){fFusExFctFileName=name;}
   void SetDecayChanFileName(TString name="48V-residual_decay.txt"){fDecayChanFileName=name;}
+  void SetPN-EnergyRange(Int_t range){fPNEnergyRange = range;}
 
 private:
   
   TString fXSFileName;
+  TString fFusExFctFileName;
   TString fDecayChanFileName;
 
   static Int_t fgNIon;      //! Number of the instance of this class
@@ -75,6 +78,8 @@ private:
   TH1F* cs_fef;
   Bool_t fIsResonnance;			//0 if fusion to stable, 1 for immediate decay
   Int_t fWhichDecayChannel;	//0 no reaction, 1->4 from most to less likely channel
+  Int_t fPNEnergyRange;			//give the "energy range (MeV)" of the proton & neutron evaporation distribution, aka number of lines in the file 
+  Int_t fProtonMult;				//multiplicity of proton for evaporation
   
   ClassDef(ATTPCXSReader,1)
 }; 

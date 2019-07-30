@@ -12,7 +12,7 @@
 #include <iostream>
 #include <fstream>
 
-void first_ana(Int_t num_ev=10){
+void first_ana(Int_t num_ev=100){
   TH2D *Eloss_vs_Range_Sca = new TH2D("Eloss_vs_Range_Sca","ELoss_vs_Range_Sca",100,0,1000,300,0,300);
   Eloss_vs_Range_Sca->SetMarkerStyle(20);
   Eloss_vs_Range_Sca->SetMarkerSize(0.5);

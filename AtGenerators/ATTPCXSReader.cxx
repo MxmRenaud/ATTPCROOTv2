@@ -381,7 +381,7 @@ Bool_t ATTPCXSReader::ReadEvent(FairPrimaryGenerator* primGen) {
   fBeamEnergy = gATVP->GetEnergy();
   
   //Requires a non zero vertex energy and pre-generated Beam event (not punch through)
-  if(gATVP->GetEnergy()>0 && gATVP->GetDecayEvtCnt()%2!=0 && fWhichDecayChannel != 0){
+  if(gATVP->GetEnergy()>0 && gATVP->GetDecayEvtCnt()%2!=0 /*&& fWhichDecayChannel != 0*/){
     //proton parameters come from the XS PDF
     Double_t energyFromPDF, thetaFromPDF;
 	 

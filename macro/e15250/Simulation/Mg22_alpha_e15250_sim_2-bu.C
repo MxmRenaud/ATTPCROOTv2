@@ -69,10 +69,10 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   Int_t m = 1;   // Multiplicity  NOTE: Due the limitation of the TGenPhaseSpace accepting only pointers/arrays the maximum multiplicity has been set to 10 particles.
   Double_t px = 0.000/a;  // X-Momentum / per nucleon!!!!!!
   Double_t py = 0.000/a;  // Y-Momentum / per nucleon!!!!!!
-  Double_t pz = 0.0526/a;  // Z-Momentum / per nucleon!!!!!!
+  Double_t pz = 2.126/a;  // Z-Momentum / per nucleon!!!!!!
   Double_t BExcEner = 0.0; 
   Double_t Bmass = 7.6; //Mass in GeV
-  Double_t NomEnergy = 20.0; //Nominal Energy of the beam: Only used for cross section calculation (Tracking energy is determined with momentum). TODO: Change this to the energy after the IC
+  Double_t NomEnergy = 210.0; //Nominal Energy of the beam: Only used for cross section calculation (Tracking energy is determined with momentum). TODO: Change this to the energy after the IC
   Double_t TargetMass = 37.56;//Mass in GeV
   
   ATTPCIonGenerator* ionGen = new ATTPCIonGenerator("Ion",z,a,q,m,px,py,pz,BExcEner,Bmass,NomEnergy);
@@ -101,7 +101,7 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   ResEner = 0.0; // Useless
   
   // ---- Beam ----
-  Zp.push_back(z); // 8B TRACKID=0
+  Zp.push_back(z); // 22Mg TRACKID=0
   Ap.push_back(a); //
   Qp.push_back(q);
   Pxp.push_back(px);
@@ -111,35 +111,27 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   ExE.push_back(BExcEner);
   
   // ---- Target ----
-  Zp.push_back(18); // 40Ar
-  Ap.push_back(40); //
+  Zp.push_back(2); // He
+  Ap.push_back(4); //
   Qp.push_back(0); //
   Pxp.push_back(0.0);
   Pyp.push_back(0.0);
   Pzp.push_back(0.0);
-  Mass.push_back(TargetMass);
+  Mass.push_back(3.728401);
   ExE.push_back(0.0);//In MeV
   
   //--- Scattered -----
-  Zp.push_back(23); // 48V TRACKID=1
-  Ap.push_back(48); //
+  Zp.push_back(13); // 25Al TRACKID=1
+  Ap.push_back(25); //
   Qp.push_back(0);
   Pxp.push_back(0.0);
   Pyp.push_back(0.0);
   Pzp.push_back(0.0);
-  Mass.push_back(43.872);
+  Mass.push_back(23.27844);
   ExE.push_back(0.0);
-//   Zp.push_back(1); // p  TRACKID=2 //TODO change !
-//   Ap.push_back(1); //
-//   Qp.push_back(0); //
-//   Pxp.push_back(0.0);
-//   Pyp.push_back(0.0);
-//   Pzp.push_back(0.0);
-//   Mass.push_back(0.93827203);
-//   ExE.push_back(0.0);//In MeV
   
   // ---- Recoil -----
-  Zp.push_back(1); // p  TRACKID=2 //TODO change !
+  Zp.push_back(1); // p  TRACKID=2
   Ap.push_back(1); //
   Qp.push_back(0); //
   Pxp.push_back(0.0);
@@ -147,20 +139,12 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   Pzp.push_back(0.0);
   Mass.push_back(0.93827203);
   ExE.push_back(0.0);//In MeV
-//   Zp.push_back(23); // 48V TRACKID=1
-//   Ap.push_back(48); //
-//   Qp.push_back(0);
-//   Pxp.push_back(0.0);
-//   Pyp.push_back(0.0);
-//   Pzp.push_back(0.0);
-//   Mass.push_back(43.872);
-//   ExE.push_back(0.0);
   
   //Double_t ThetaMinCMS = 0.0;
   //Double_t ThetaMaxCMS = 180.0; 
   //ATTPC2Body* TwoBody = new ATTPC2Body("TwoBody",&Zp,&Ap,&Qp,mult,&Pxp,&Pyp,&Pzp,&Mass,&ExE,ResEner, ThetaMinCMS,ThetaMaxCMS);
   
-  ATTPCXSReader* reader = new ATTPCXSReader("XSReader",/*"8b-40Ar",*/&Zp,&Ap,&Qp,mult,&Pxp,&Pyp,&Pzp,&Mass);
+  ATTPCXSReader* reader = new ATTPCXSReader("XSReader",&Zp,&Ap,&Qp,mult,&Pxp,&Pyp,&Pzp,&Mass);
   primGen->AddGenerator(reader);
   
   run->SetGenerator(primGen);

@@ -113,7 +113,7 @@ void Mg22_alpha_e15250_sim(Int_t nEvents = 10, TString mcEngine = "TGeant4")
   ExE.push_back(BExcEner);
 
   // ---- Target ----
-  Zp.push_back(2); // p
+  Zp.push_back(2); // He 
 	Ap.push_back(4); //
 	Qp.push_back(0); //
 	Pxp.push_back(0.0);
@@ -123,7 +123,7 @@ void Mg22_alpha_e15250_sim(Int_t nEvents = 10, TString mcEngine = "TGeant4")
 	ExE.push_back(0.0);//In MeV
 
   //--- Scattered -----
-  Zp.push_back(13); // 25Al TRACKID=1
+  Zp.push_back(13); // 25Al TRACKID=1 
   Ap.push_back(25); //
   Qp.push_back(0);
   Pxp.push_back(0.0);

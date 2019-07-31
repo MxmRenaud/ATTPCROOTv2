@@ -1,4 +1,6 @@
 Ebeam	percentage1	mult1 Nproton1	percentage2	mult2	Nprot2	percentage3	mult3	Nprot3	percent4	mult4	Nprot4
+8	0.48	3	2	0.11	2	0	0.09	2	2	0.08	5	2
+9	0.41	2	1	0.13	3	1	0.11	2	0	0.1	3	2
 10	0.37	2	1	0.17	3	1	0.12	3	2	0.1	2	0
 11	0.3 2	1	0.21	3	1	0.09	2	0	0.06	2	2
 12	0.28	2	1	0.24	3	1	0.18	3	2	0.07 2	0
@@ -9,3 +11,4 @@ Ebeam	percentage1	mult1 Nproton1	percentage2	mult2	Nprot2	percentage3	mult3	Npro
 17	0.34	3	1	0.27	3	2	0.11	2	1	0.07	6	3
 18	0.33	3	1	0.28	3	2	0.10	2	1	0.08	6	3
 19	0.36	3	1	0.28	3	2	0.09	6	3	0.08	2	1
+20	0.36	3	1	0.28	3	2	0.09	6	3	0.08	2	1

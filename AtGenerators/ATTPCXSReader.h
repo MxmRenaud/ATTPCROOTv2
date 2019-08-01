@@ -50,7 +50,7 @@ class ATTPCXSReader : public FairGenerator{
   void SetXSFileName(TString name="xs_22Mgp_fusionEvaporation.txt"){fXSFileName=name;}
   void SetFusExFctFileName(TString name){fFusExFctFileName=name;}
   void SetDecayChanFileName(TString name="48V-residual_decay.txt"){fDecayChanFileName=name;}
-  void SetPN-EnergyRange(Int_t range){fPNEnergyRange = range;}
+  void SetPNEnergyRange(Int_t range){fPNEnergyRange = range;}
 
 private:
   

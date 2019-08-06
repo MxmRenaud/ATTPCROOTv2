@@ -30,9 +30,9 @@ class ATTPCXSReader : public FairGenerator{
 		std::vector<Double_t> *px, std::vector<Double_t>* py, std::vector<Double_t> *pz,
 		std::vector<Double_t> *mass);
   
-  ATTPCXSReader(const char* name, const char* nameReac, std::vector<Int_t> *z, std::vector<Int_t> *a, std::vector<Int_t> *q,
+ /* ATTPCXSReader(const char* name, const char* nameReac, std::vector<Int_t> *z, std::vector<Int_t> *a, std::vector<Int_t> *q,
 		Int_t mult, std::vector<Double_t> *px, std::vector<Double_t>* py, std::vector<Double_t> *pz,
-		std::vector<Double_t> *mass);
+		std::vector<Double_t> *mass);*/
 
   ATTPCXSReader& operator=(const ATTPCXSReader&) { return *this; }
 

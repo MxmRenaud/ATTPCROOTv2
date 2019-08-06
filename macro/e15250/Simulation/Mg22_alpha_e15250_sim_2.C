@@ -3,10 +3,10 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   TString dir = getenv("VMCWORKDIR");
   
   // Output file name
-  TString outFile ="../data/attpcsim_e15250_2M.root";
+  TString outFile ="../data/attpcsim_e15250_2A.root";
   
   // Parameter file name
-  TString parFile="../data/attpcpar_e15250_2M.root";
+  TString parFile="../data/attpcpar_e15250_2A.root";
   
   // -----   Timer   --------------------------------------------------------
   TStopwatch timer;
@@ -16,7 +16,6 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   //gSystem->Load("libAtGen.so");
   
   ATVertexPropagator* vertex_prop = new ATVertexPropagator();
-  
   
   // -----   Create simulation run   ----------------------------------------
   FairRunSim* run = new FairRunSim();
@@ -135,7 +134,7 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   Pxp.push_back(0.0);
   Pyp.push_back(0.0);
   Pzp.push_back(0.0);
-  Mass.push_back(3.728401); //43.872);
+  Mass.push_back(24.799); //43.872);
   ExE.push_back(0.0);
 //   Zp.push_back(1); // p  TRACKID=2 //TODO change !
 //   Ap.push_back(1); //
@@ -164,14 +163,16 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
 //   Mass.push_back(43.872);
 //   ExE.push_back(0.0);
   
-  //Double_t ThetaMinCMS = 0.0;
-  //Double_t ThetaMaxCMS = 180.0; 
-  //ATTPC2Body* TwoBody = new ATTPC2Body("TwoBody",&Zp,&Ap,&Qp,mult,&Pxp,&Pyp,&Pzp,&Mass,&ExE,ResEner, ThetaMinCMS,ThetaMaxCMS);
+//   Double_t ThetaMinCMS = 0.0;
+//   Double_t ThetaMaxCMS = 180.0; 
+//   ATTPC2Body* TwoBody = new ATTPC2Body("TwoBody",&Zp,&Ap,&Qp,mult,&Pxp,&Pyp,&Pzp,&Mass,&ExE,ResEner, ThetaMinCMS,ThetaMaxCMS);
+//   primGen->AddGenerator(TwoBody);
   
   ATTPCXSReader* reader = new ATTPCXSReader("XSReader",/*"8b-40Ar",*/&Zp,&Ap,&Qp,mult,&Pxp,&Pyp,&Pzp,&Mass);
   primGen->AddGenerator(reader);
   
   run->SetGenerator(primGen);
+  
   
   // ------------------------------------------------------------------------
   
@@ -180,21 +181,20 @@ void Mg22_alpha_e15250_sim_2(Int_t nEvents = 100, TString mcEngine = "TGeant4") 
   run->SetStoreTraj(kTRUE);
   
   
-  
   // -----   Initialize simulation run   ------------------------------------
   run->Init();
   // ------------------------------------------------------------------------
-  
+  cout<<std::endl<<std::endl<<"HULLOOOOOOOOOOOOOOOOOOOOOOOOOO !!!!!!!!!!!!!!!"<<std::endl<<std::endl;
   // -----   Runtime database   ---------------------------------------------
   
   Bool_t kParameterMerged = kTRUE;
   FairParRootFileIo* parOut = new FairParRootFileIo(kParameterMerged);
   parOut->open(parFile.Data());
   rtdb->setOutput(parOut);
-  rtdb->saveOutput();
+  cout<<std::endl<<std::endl<<"MINE TURTLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl<<std::endl;rtdb->saveOutput();
   rtdb->print();
   // ------------------------------------------------------------------------
-  
+
   // -----   Start run   ----------------------------------------------------
   run->Run(nEvents);
   
